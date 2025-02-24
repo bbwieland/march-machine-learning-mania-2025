@@ -173,3 +173,4 @@ cython_debug/
 march-machine-learning-mania-2025/*
 ratings/*
 predictions/*
+.DS_Store
