@@ -174,3 +174,6 @@ march-machine-learning-mania-2025/*
 ratings/*
 predictions/*
 .DS_Store
+
+*.log
+*.ipynb
