@@ -17,5 +17,11 @@ You must add the flags `league` and `season` for the script to execute:
 For example, a valid command to make predictions for this season's NCAAW bracket would be:
 
 ```
-python run_model.py --season=2025 --league="W"
+python run_model.py --season=2024
+```
+
+To backtest the model you could run
+
+```
+python backtest_model.py --season=2024
 ```
