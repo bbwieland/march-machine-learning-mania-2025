@@ -75,6 +75,28 @@ def save_submission(submission: pd.DataFrame, league: str, season: int):
     filepath = os.path.join('predictions', league + "_" + str(season) + "Submission.csv")
     submission.to_csv(filepath, index=False)
 
+def combine_and_save_full_submission(m_preds: pd.DataFrame, w_preds: pd.DataFrame, season: int):
+    """Given men's and women's predictions, combines them and saves to a single file.
+
+    Parameters
+    ----------
+    m_preds : pd.DataFrame
+        The men's predictions.
+    w_preds : pd.DataFrame
+        The women's predictions.
+    season : int
+        The season to predict over.
+    """
+
+    if not os.path.exists('predictions'):
+        os.mkdir('predictions')
+
+    filepath = os.path.join('predictions',  "Full" + str(season) + "Submission.csv")
+    full_preds = pd.concat([m_preds, w_preds], ignore_index=True)
+    full_preds.round({'Pred' : 3})
+    full_preds.to_csv(filepath, index=False)
+
+
 
 def format_match_id_from_teams(home: int, away: int) -> str:
     """Given two team IDs, returns the matchup ID for submission scoring purposes. 

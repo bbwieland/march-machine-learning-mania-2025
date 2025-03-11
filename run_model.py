@@ -4,22 +4,32 @@ import etl
 import utils
 import argparse
 import logging
+from typing import Literal, Dict
+import pandas as pd
+
+from constants import LEAGUES
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='model_pipeline.log', encoding='utf-8', level=logging.INFO)
 
-if __name__ == "__main__":
+def run_full_model_pipeline(league: Literal['M', 'W'], season: int) -> Dict[str, pd.DataFrame]:
+    """High-level wrapper for CLI interfacing. Fits the full model with all outputs for the given parameters.
 
-    parser = argparse.ArgumentParser(description='Parameters for the team-strength model.')
-    parser.add_argument('--season', type=int, required=True, help='The season to run the model for')
-    parser.add_argument('--league', type=str, required=True, help='The league to run the model for')
-    args = parser.parse_args()
+    Parameters
+    ----------
+    league : Literal['M', 'W']
+        Whether to fit the model for men's or women's NCAA basketball.
+    season : int
+        The season to model.
 
-    league = args.league
-    season = args.season
-
-    logger.info(f"Forecasting NCAA{league} {season} matchups!")
-
+    Returns
+    -------
+    Dict[str, pd.DataFrame]
+        A dictionary containing model outputs: 
+        - 'ratings' : a dataframe of team ratings.
+        - 'predictions' : a readable labeled dataframe of matchup predictions.
+        - 'submission' : a dataframe of predictions formatted for competition submission.
+    """
     # Preprocessing Data for Modeling
     df = etl.read_league_season_results(league=league, season=season)
     logger.info("Imported data.")
@@ -49,10 +59,41 @@ if __name__ == "__main__":
     labeled_preds = etl.add_team_names_to_ids(pred_data=matchup_preds, league=league)
     output_preds = pred.format_predictions_for_submission(pred_data=matchup_preds)
 
-    # Saving Outputs
-    logger.info("Saving predictions...")
-    utils.save_team_ratings(ratings=team_ratings, league=league, season=season)
-    utils.save_readable_predictions(labeled_preds=labeled_preds, league=league, season=season)
-    utils.save_submission(submission=output_preds, league=league, season=season)
+    return {'ratings' : team_ratings, 'predictions' : labeled_preds, 'submission' : output_preds}
 
+def save_predictions(pred_dict: Dict[str, pd.DataFrame], league: Literal['M', 'W'], season: int):
+    """Given a dictionary from `run_full_model_pipeline`, saves necessary data to csvs.
+
+    Parameters
+    ----------
+    pred_dict : Dict[str, pd.DataFrame]
+        The dictionary of model team ratings, predictions, and a submission dataframe.
+    league : Literal['M', 'W']
+        Whether to fit the model for men's or women's NCAA basketball.
+    season : int
+        The season to model.
+    """
+
+    ratings = pred_dict['ratings']
+    predictions = pred_dict['predictions']
+    submission = pred_dict['submission']
+
+    utils.save_team_ratings(ratings=ratings, league=league, season=season)
+    utils.save_readable_predictions(labeled_preds=predictions, league=league, season=season)
+    utils.save_submission(submission=submission, league=league, season=season)
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description='Parameters for the team-strength model.')
+    parser.add_argument('--season', type=int, required=True, help='The season to run the model for')
+    args = parser.parse_args()
+    season = args.season
+
+    m_outputs = run_full_model_pipeline(league="M", season=season)
+    w_outputs = run_full_model_pipeline(league="W", season=season)
+
+    save_predictions(m_outputs, league="M", season=season)
+    save_predictions(w_outputs, league="W", season=season)
+
+    utils.combine_and_save_full_submission(m_preds=m_outputs['submission'], w_preds=w_outputs['submission'], season=season)
     logger.info(f"Successfully executed {__name__}!")
