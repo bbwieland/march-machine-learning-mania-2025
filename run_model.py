@@ -57,7 +57,7 @@ def run_full_model_pipeline(league: Literal['M', 'W'], season: int) -> Dict[str,
     logger.info("Formatting predictions for submission...")
     matchup_preds = pred.get_game_predictions_from_posterior(post_pred=post_pred, team_ids=team_ids)
     labeled_preds = etl.add_team_names_to_ids(pred_data=matchup_preds, league=league)
-    output_preds = pred.format_predictions_for_submission(pred_data=matchup_preds)
+    output_preds = pred.format_predictions_for_submission(pred_data=matchup_preds, season=season)
 
     return {'ratings' : team_ratings, 'predictions' : labeled_preds, 'submission' : output_preds}
 

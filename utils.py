@@ -1,6 +1,7 @@
 from typing import Literal
 import os
 import pandas as pd
+import numpy as np
 import constants as c
 
 def get_detailed_results_path(league: Literal['M', 'W']) -> str:
@@ -18,6 +19,22 @@ def get_detailed_results_path(league: Literal['M', 'W']) -> str:
     """
 
     path = os.path.join(c.DATA_PATH, league + c.REG_SEASON_DETAILED)
+    return path
+
+def get_postseason_results_path(league: Literal['M', 'W']) -> str:
+    """Gets the path to read in the postseason results for a given league.
+
+    Parameters
+    ----------
+    league : Literal["M", "W"]
+        Whether to read NCAAM or NCAAW data.
+
+    Returns
+    -------
+    str
+        A filepath to the postseason results file.
+    """
+    path = os.path.join(c.DATA_PATH, league + c.POSTSEASON_RESULTS)
     return path
 
 def save_team_ratings(ratings: pd.DataFrame, league: str, season: int):
@@ -98,7 +115,7 @@ def combine_and_save_full_submission(m_preds: pd.DataFrame, w_preds: pd.DataFram
 
 
 
-def format_match_id_from_teams(home: int, away: int) -> str:
+def format_match_id_from_teams(home: int, away: int, season: int) -> str:
     """Given two team IDs, returns the matchup ID for submission scoring purposes. 
 
     Parameters
@@ -107,6 +124,8 @@ def format_match_id_from_teams(home: int, away: int) -> str:
         The home team's ID
     away : int
         The away team's ID
+    season : int
+        The season to predict over.
 
     Returns
     -------
@@ -114,8 +133,28 @@ def format_match_id_from_teams(home: int, away: int) -> str:
         The required output string formatted for competition submission.
     """
     if away > home:
-        output_str = str(c.CURRENT_SEASON) + "_" + str(int(home)) + "_" + str(int(away))
+        output_str = str(season) + "_" + str(int(home)) + "_" + str(int(away))
     else:
-        output_str = str(c.CURRENT_SEASON) + "_" + str(int(away)) + "_" + str(int(home))
+        output_str = str(season) + "_" + str(int(away)) + "_" + str(int(home))
 
     return output_str
+
+def brier_score(predictions: np.array, observed: np.array) -> float:
+    """Computes the Brier Score (MSE for booleans) over an array of predictions & observed.
+
+    Parameters
+    ----------
+    predictions : np.array
+        The predicted values. Should be bounded on [0,1].
+    observed : np.array
+        The observations, which should be booleans in the set (0, 1)
+
+    Returns
+    -------
+    float
+        The Brier score of the predictions vs. the observations. 
+    """
+
+    assert predictions.shape == observed.shape
+    brier = np.mean((predictions - observed) ** 2)
+    return brier

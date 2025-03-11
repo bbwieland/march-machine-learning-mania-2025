@@ -5,6 +5,8 @@ LEAGUES = [MENS_PREFIX, WOMENS_PREFIX]
 CURRENT_SEASON = 2025
 
 REG_SEASON_DETAILED = "RegularSeasonDetailedResults.csv"
+POSTSEASON_RESULTS = "NCAATourneyCompactResults.csv"
+
 DATA_PATH = "march-machine-learning-mania-2025"
 
 POSSESSIONS = "poss"

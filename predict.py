@@ -76,13 +76,15 @@ def get_game_predictions_from_posterior(post_pred: az.InferenceData, team_ids: n
     model_predictions = pd.DataFrame(data={c.HOME : home_team, c.AWAY : away_team, c.PREDICTION : win_probabilities})
     return model_predictions
 
-def format_predictions_for_submission(pred_data: pd.DataFrame) -> pd.DataFrame:
+def format_predictions_for_submission(pred_data: pd.DataFrame, season: int) -> pd.DataFrame:
     """Formats a set of predictions for submitting to the competion in ID, Pred format.
 
     Parameters
     ----------
     pred_data : pd.DataFrame
         A dataframe of model predictions with columns c.HOME, c.AWAY, c.PREDICTION.
+    season : int
+        The season to predict over.
 
     Returns
     -------
@@ -95,7 +97,7 @@ def format_predictions_for_submission(pred_data: pd.DataFrame) -> pd.DataFrame:
 
     for _ , match in pred_data.iterrows():
 
-        match_id = utils.format_match_id_from_teams(home=match[c.HOME], away=match[c.AWAY])
+        match_id = utils.format_match_id_from_teams(home=match[c.HOME], away=match[c.AWAY], season=season)
         match_pred = match[c.PREDICTION] if match[c.AWAY] > match[c.HOME] else 1 - match[c.PREDICTION]
 
         ids.append(match_id)

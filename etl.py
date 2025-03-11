@@ -45,6 +45,83 @@ def read_league_season_results(league: Literal['M', 'W'], season: int) -> pd.Dat
     df_season = df.query("Season == @season")
     return df_season
 
+def read_postseason_results(league: Literal['M', 'W'], season: int) -> pd.DataFrame:
+    """Reads in detailed regular-season game results from a given season & league.
+
+    Parameters
+    ----------
+    league : Literal["M", "W"]
+        Whether to read the NCAAM or NCAAW data.
+    season : int
+        The season to read in data for.
+
+    Returns
+    -------
+    pd.DataFrame
+        A dataframe containing the requested league-season data.
+    """
+    filepath = utils.get_postseason_results_path(league=league)
+    df = pd.read_csv(filepath)
+    df_season = df.query('Season == @season')
+    return df_season
+
+def match_postseason_format_to_predictions(results_df: pd.DataFrame) -> pd.DataFrame:
+    """Reformats a league-season dataframe in ID, Pred format.
+
+    Parameters
+    ----------
+    results_df : pd.DataFrame
+        The dataframe of results from `read_postseason_results`
+
+    Returns
+    -------
+    pd.DataFrame
+        A dataframe containing:
+        - `ID`: keyed to match prediction ID.
+        - `Result`: 1 if the 1st team in the ID pairing won and 0 otherwise. 
+    """
+
+    season = results_df['Season'].values[0]
+
+    winner_ids = results_df['WTeamID'].values
+    loser_ids = results_df['LTeamID'].values
+
+    game_ids = []
+    results = []
+
+    for winner, loser in zip(winner_ids, loser_ids):
+        game_id = f"{season}_{min(winner, loser)}_{max(winner, loser)}"
+        # If the winning team ID is > the loser's, then it comes 2nd in the game ID.
+        # Thus the result is a win for team 2 and a 0; vice versa for WTeamID < LTeamId.
+        result = 0 if winner > loser else 1
+
+        game_ids.append(game_id)
+        results.append(result)
+
+    output_df = pd.DataFrame(data={'ID' : game_ids, 'Result': results})
+    return output_df
+
+def read_predictions(season: int, league: Literal['M', 'W']) -> pd.DataFrame:
+    """Reads in model predictions for a given season and league.
+
+    Parameters
+    ----------
+    league : Literal["M", "W"]
+        Whether to read the NCAAM or NCAAW data.
+    season : int
+        The season to read in data for.
+
+    Returns
+    -------
+    pd.DataFrame
+        An ID, Pred dataframe of predictions.
+    """
+
+    filepath = os.path.join('predictions', f'{league}_{season}Submission.csv')
+    df = pd.read_csv(filepath)
+    return df
+
+
 def add_possessions(match_df: pd.DataFrame) -> pd.DataFrame:
     """Adds possession totals to each game. 
 
