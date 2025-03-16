@@ -7,7 +7,7 @@ import logging
 from typing import Literal, Dict
 import pandas as pd
 
-from constants import LEAGUES
+from constants import PREDICTION_SEASONS
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='model_pipeline.log', encoding='utf-8', level=logging.INFO)
@@ -85,15 +85,27 @@ def save_predictions(pred_dict: Dict[str, pd.DataFrame], league: Literal['M', 'W
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Parameters for the team-strength model.')
-    parser.add_argument('--season', type=int, required=True, help='The season to run the model for')
+    parser.add_argument('--season', type=int, required=False, help='The season to run the model for')
+    parser.add_argument('--fit_all', action='store_true', help='Fit all models?')
+
     args = parser.parse_args()
-    season = args.season
 
-    m_outputs = run_full_model_pipeline(league="M", season=season)
-    w_outputs = run_full_model_pipeline(league="W", season=season)
+    if args.fit_all:
+        seasons = PREDICTION_SEASONS
+        for season in seasons:
+            m_outputs = run_full_model_pipeline(league="M", season=season)
+            w_outputs = run_full_model_pipeline(league="W", season=season)
+            save_predictions(m_outputs, league="M", season=season)
+            save_predictions(w_outputs, league="W", season=season)
+            utils.combine_and_save_full_submission(m_preds=m_outputs['submission'], w_preds=w_outputs['submission'], season=season)
 
-    save_predictions(m_outputs, league="M", season=season)
-    save_predictions(w_outputs, league="W", season=season)
+    else:
+        season = args.season
 
-    utils.combine_and_save_full_submission(m_preds=m_outputs['submission'], w_preds=w_outputs['submission'], season=season)
-    logger.info(f"Successfully executed {__name__}!")
+        m_outputs = run_full_model_pipeline(league="M", season=season)
+        w_outputs = run_full_model_pipeline(league="W", season=season)
+
+        save_predictions(m_outputs, league="M", season=season)
+        save_predictions(w_outputs, league="W", season=season)
+
+        utils.combine_and_save_full_submission(m_preds=m_outputs['submission'], w_preds=w_outputs['submission'], season=season)

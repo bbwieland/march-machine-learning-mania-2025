@@ -51,7 +51,7 @@ def build_model(data_dict: Dict[str, List[int | float]], coords: Dict[str, np.ar
         home_xeff = pm.Deterministic("home_xeff", league_eff + league_hfa * at_home + theta_off[home_idx] - theta_def[away_idx])
         away_xeff = pm.Deterministic("away_xeff", league_eff - league_hfa * at_home + theta_off[away_idx] - theta_def[home_idx])
         xposs = pm.Deterministic("xposs", league_pace * team_pace[home_idx] * team_pace[away_idx])
-        sigma_game_eff = pm.Deterministic("sigma_game_eff", sigma_eff * xposs / league_pace)
+        sigma_game_eff = pm.Deterministic("sigma_game_eff", sigma_eff * league_pace / xposs)
 
         # Likelihoods
         home_eff = pm.Normal("home_eff", mu=home_xeff, sigma=sigma_game_eff, observed=home_ppp, shape=home_idx.shape)
