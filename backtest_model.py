@@ -13,7 +13,7 @@ import argparse
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='backtesting.log', encoding='utf-8', level=logging.INFO)
 
-PREDICTED_SEASONS = [2024, 2023, 2022, 2021]
+PREDICTED_SEASONS = [2017, 2018, 2019, 2021, 2022, 2023, 2024]
 
 def backtest_league_season(season: int, league: Literal['M', 'W']):
     """Back-testing wrapper to calculate Brier score for the given season & league.
@@ -42,8 +42,8 @@ def backtest_league_season(season: int, league: Literal['M', 'W']):
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description='Parameters for the team-strength model.')
-    parser.add_argument('--season', type=int, required=False, default=None, help='The season to run the model for')
+    parser = argparse.ArgumentParser(description='Parameters for backtesting the team-strength model.')
+    parser.add_argument('--season', type=int, required=False, default=None, help='The season to backtest the model for')
     parser.add_argument('--backtest_all', action='store_true', help='Backtest all years listed at the top.')
     args = parser.parse_args()
 
