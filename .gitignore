@@ -177,3 +177,4 @@ predictions/*
 
 *.log
 *.ipynb
+.DS_Store
