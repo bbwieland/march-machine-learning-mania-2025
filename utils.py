@@ -158,3 +158,16 @@ def brier_score(predictions: np.array, observed: np.array) -> float:
     assert predictions.shape == observed.shape
     brier = np.mean((predictions - observed) ** 2)
     return brier
+
+def boost_prediction_confidence(pred: float, threshold: float = c.CONFIDENCE_BOOST) -> float:
+
+    if pred >= 0.5 and pred <= threshold:
+        output_pred = threshold
+
+    elif pred <= 0.5 and pred >= 1 - threshold:
+        output_pred = 1 - threshold
+
+    else:
+        output_pred = pred
+
+    return output_pred

@@ -7,12 +7,12 @@ import logging
 from typing import Literal, Dict
 import pandas as pd
 
-from constants import PREDICTION_SEASONS
+from constants import PREDICTION_SEASONS, OUTPUT_PRED
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='model_pipeline.log', encoding='utf-8', level=logging.INFO)
 
-def run_full_model_pipeline(league: Literal['M', 'W'], season: int) -> Dict[str, pd.DataFrame]:
+def run_full_model_pipeline(league: Literal['M', 'W'], season: int, boost_confidence: bool = False) -> Dict[str, pd.DataFrame]:
     """High-level wrapper for CLI interfacing. Fits the full model with all outputs for the given parameters.
 
     Parameters
@@ -59,6 +59,9 @@ def run_full_model_pipeline(league: Literal['M', 'W'], season: int) -> Dict[str,
     labeled_preds = etl.add_team_names_to_ids(pred_data=matchup_preds, league=league)
     output_preds = pred.format_predictions_for_submission(pred_data=matchup_preds, season=season)
 
+    if boost_confidence:
+        output_preds[OUTPUT_PRED] = [utils.boost_prediction_confidence(prediction) for prediction in output_preds[OUTPUT_PRED]]
+
     return {'ratings' : team_ratings, 'predictions' : labeled_preds, 'submission' : output_preds}
 
 def save_predictions(pred_dict: Dict[str, pd.DataFrame], league: Literal['M', 'W'], season: int):
@@ -87,6 +90,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Parameters for the team-strength model.')
     parser.add_argument('--season', type=int, required=False, help='The season to run the model for')
     parser.add_argument('--fit_all', action='store_true', help='Fit all models?')
+    parser.add_argument('--boost_confidence', action='store_true', help='Cheat by boosting prediction confidence?')
+
 
     args = parser.parse_args()
 
@@ -102,8 +107,8 @@ if __name__ == "__main__":
     else:
         season = args.season
 
-        m_outputs = run_full_model_pipeline(league="M", season=season)
-        w_outputs = run_full_model_pipeline(league="W", season=season)
+        m_outputs = run_full_model_pipeline(league="M", season=season, boost_confidence=args.boost_confidence)
+        w_outputs = run_full_model_pipeline(league="W", season=season, boost_confidence=args.boost_confidence)
 
         save_predictions(m_outputs, league="M", season=season)
         save_predictions(w_outputs, league="W", season=season)
